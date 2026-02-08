@@ -1,4 +1,5 @@
 import arcade
+from pathlib import Path
 from arcade import Camera2D
 from arcade.particles import FadeParticle, Emitter, EmitMaintainCount, EmitBurst
 import math
@@ -302,7 +303,6 @@ class MyGame(arcade.View):
             pass
 
     def setup(self):
-        from pathlib import Path
         project_root = Path(__file__).parent
 
         # Загрузка текстур персонажа
