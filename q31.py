@@ -302,34 +302,42 @@ class MyGame(arcade.View):
             pass
 
     def setup(self):
-        # Текстуры ходьбы
-        try:
-            walk_image = Image.open("Run (32x32).png").convert("RGBA")
-            self.walk_textures_right = [
-                arcade.Texture(image=walk_image.crop((i * 32, 0, i * 32 + 32, 32)))
-                for i in range(4)
-            ]
-            self.walk_textures_left = [
-                arcade.Texture(image=ImageOps.mirror(tex.image))
-                for tex in self.walk_textures_right
-            ]
-        except:
-            self.walk_textures_right = [arcade.make_soft_square_texture(32, arcade.color.BLUE, 255)]
-            self.walk_textures_left = [arcade.make_soft_square_texture(32, arcade.color.RED, 255)]
+        from pathlib import Path
+        project_root = Path(__file__).parent
 
-        # Текстуры лазания
-        try:
-            climb_image = Image.open("Wall Jump (32x32).png").convert("RGBA")
-            self.climb_textures = [
-                arcade.Texture(image=climb_image.crop((i * 32, 0, i * 32 + 32, 32)))
-                for i in range(5)
-            ]
-            self.climb_textures_mirrored = [
-                arcade.Texture(image=ImageOps.mirror(tex.image))
-                for tex in self.climb_textures
-            ]
-        except:
-            self.climb_textures = self.climb_textures_mirrored = None
+        # Загрузка текстур персонажа
+        walk_image = Image.open(project_root / "Run (32x32).png").convert("RGBA")
+        self.walk_textures_right = [
+            arcade.Texture(image=walk_image.crop((i * 32, 0, i * 32 + 32, 32)))
+            for i in range(4)
+        ]
+        self.walk_textures_left = [
+            arcade.Texture(image=ImageOps.mirror(tex.image))
+            for tex in self.walk_textures_right
+        ]
+
+        climb_image = Image.open(project_root / "Wall Jump (32x32).png").convert("RGBA")
+        self.climb_textures = [
+            arcade.Texture(image=climb_image.crop((i * 32, 0, i * 32 + 32, 32)))
+            for i in range(5)
+        ]
+        self.climb_textures_mirrored = [
+            arcade.Texture(image=ImageOps.mirror(tex.image))
+            for tex in self.climb_textures
+        ]
+
+        # Загрузка карты
+        map_path = project_root / "proj1.tmx"
+        if not map_path.exists():
+            map_path = project_root / "maps" / "proj1.tmx"
+
+        self.tile_map = arcade.load_tilemap(map_path, scaling=map_scaling)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        self.walls = self.scene['Platforms']
+
+        # Слои карты
+        self.spikes = self.scene['idle'] if 'idle' in self.scene else arcade.SpriteList()
+        self.fruits = self.scene['fruits'] if 'fruits' in self.scene else arcade.SpriteList()
 
         # Игрок
         self.spawn_x = 6 * tile_size
@@ -345,24 +353,6 @@ class MyGame(arcade.View):
         self.animation_timer = 0.0
         self.animation_speed = 0.1
         self.facing_right = True
-
-        # Уровень
-        try:
-            self.tile_map = arcade.load_tilemap("proj1.tmx", scaling=map_scaling)
-            self.scene = arcade.Scene.from_tilemap(self.tile_map)
-            self.walls = self.scene['Platforms']
-        except:
-            self.scene = arcade.Scene()
-            self.walls = arcade.SpriteList()
-            floor = arcade.SpriteSolidColor(int(800 * map_scaling), 20, arcade.color.GRAY)
-            floor.center_x = 400 * map_scaling
-            floor.center_y = 10 * map_scaling
-            self.walls.append(floor)
-            self.scene.add_sprite_list("Platforms", sprite_list=self.walls)
-
-        # Исправлено: Scene не имеет метода .get()
-        self.spikes = self.scene['idle'] if 'idle' in self.scene else arcade.SpriteList()
-        self.fruits = self.scene['fruits'] if 'fruits' in self.scene else arcade.SpriteList()
 
         # Управление
         self.left = self.right = self.up = self.down = False
@@ -408,10 +398,7 @@ class MyGame(arcade.View):
         self.camera_offset_x = self.camera_offset_y = 0.0
 
         # Звук
-        try:
-            self.fruit_sound = arcade.load_sound(":resources:sounds/coin5.wav")
-        except:
-            self.fruit_sound = None
+        self.fruit_sound = arcade.load_sound(":resources:sounds/coin5.wav")
 
     def respawn_player(self):
         self.player.center_x = self.spawn_x
