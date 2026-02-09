@@ -74,6 +74,7 @@ sprite_scale = 0.35
 map_scaling = 0.5
 tile_size = 16 * map_scaling
 STATS_FILE = "game_stats.csv"
+WORLD_COLOR = arcade.color.SKY_BLUE  # ← ДОБАВЛЕНА КОНСТАНТА ФОНА
 
 
 class StatsView(arcade.View):
@@ -420,7 +421,7 @@ class MyGame(arcade.View):
                 arcade.play_sound(self.fruit_sound, 0.2)
 
     def on_draw(self):
-        self.clear()
+        self.clear(WORLD_COLOR)  # ← ПРИМЕНЕН ЦВЕТ ФОНА
         self.world_camera.use()
         self.scene.draw()
         self.player_spritelist.draw()
